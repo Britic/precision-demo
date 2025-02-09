@@ -11,7 +11,7 @@ WORKDIR /app
 COPY ./ /app
 
 # Install dependencies
-COPY shard.yml shard.lock ./
+RUN shards update
 RUN shards install
 
 # Ensure SQLite3 database file exists
