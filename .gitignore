@@ -3,3 +3,6 @@
 
 # Exclude the DB so we use fresh data
 src/prices.db
+
+#Exclude .lock files
+shard.lock
