@@ -20,7 +20,19 @@ That said, there were some considerations applied in the application to point ou
     - The HTML parser looks only for the relevant div based on the `data-asin` value. This limits node traversal.
     - The scrape now functionality utilizes the same function as the fetched job
 
-- System Design
+- File Overview
+  - `src/database.cr` creates the database and table and has the functions to retrieve and insert data
+    - These are rudimentary functions - no ORM-like usage due to time constraints
+  - `src/server.cr`
+    - Basic server instantiation and routing
+    - Also sets up the scehduled scrape
+  - `src/scraper.cr`
+    - Handles the implementation of the scrape
+      - HTTP Request
+      - HTML Parsing
+      - Inserting into database
+
+- System Notes
     - I'm not familiar enough with crystal to know how (or if it's possible!) to build out more abstractions
     - Functionality was built to meet the deliverables
     - Added some additional functionality outside of scope
