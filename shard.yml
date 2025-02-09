@@ -1,0 +1,10 @@
+name: crystal_scraper
+version: 0.1.0
+
+dependencies:
+  sqlite3:
+    github: crystal-lang/crystal-sqlite3
+  kemal:
+    github: kemalcr/kemal
+  myhtml:
+    github: kostya/myhtml

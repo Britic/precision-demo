@@ -1,0 +1,11 @@
+services:
+  precision-demo-app:
+    build: .
+    container_name: precision_scaper_demo
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app
+    environment:
+      - DATABASE_URL=sqlite3:///app/prices.db
+    restart: unless-stopped

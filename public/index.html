@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Tracker</title>
+
+    <!-- ✅ Tailwind CSS (Dark Mode Enabled by Default) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#1e293b", // Dark slate
+                        accent: "#38bdf8"   // Light blue
+                    }
+                }
+            },
+            darkMode: 'media'  // Uses system preference for dark mode
+        };
+    </script>
+
+    <!-- Chart.js-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Moment.js-->
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/min/moment.min.js"></script>
+
+</head>
+<body class="bg-primary text-white min-h-screen flex flex-col items-center justify-center">
+
+<div class="w-full max-w-3xl p-6">
+    <h1 class="text-3xl font-bold text-center mb-4">AW SuperFast Roadster Price Tracker</h1>
+
+    <!-- Chart Container -->
+    <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+        <canvas id="priceChart"></canvas>
+    </div>
+
+    <!-- Countdown Timer -->
+    <div class="mt-4 text-center">
+        <p class="text-lg">Next update in <span id="countdown">60</span> seconds</p>
+    </div>
+
+
+    <!-- Scrape Now Button -->
+    <button onclick="scrapeNow()" class="mt-4 w-full bg-accent hover:bg-blue-400 text-gray-900 py-2 px-4 rounded">
+        Scrape Now
+    </button>
+</div>
+
+<script>
+    // Fetch the data and populate the chart
+    async function fetchData() {
+        // Hit the API
+        let response = await fetch("/prices");
+        let data = await response.json();        
+        
+        // Price is in cents - divde here for display
+        let prices = data.map(d => (d[1] / 100)); // Price
+        let labels = data.map(d => d[2]); // DateTime
+        
+        // Draw the chart
+        updateChart(labels, prices);
+    }
+
+    // Initialize and populate the chart
+    let ctx = document.getElementById("priceChart").getContext("2d");
+    let priceChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: [],
+            datasets: [{
+                label: "Price ($)",
+                data: [],
+                borderColor: "#38bdf8",
+                backgroundColor: "rgba(56, 189, 248, 0.2)",
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    grid: { color: "rgba(255,255,255,0.1)" }
+                },
+                y: { grid: { color: "rgba(255,255,255,0.1)" } }
+            }
+        }
+    });
+
+    // Isolated function for updating the chart
+    function updateChart(labels, prices) {
+        priceChart.data.labels = labels;
+        priceChart.data.datasets[0].data = prices;
+        priceChart.update();
+    }
+
+    // Function for manual scrape
+    async function scrapeNow() {
+        await fetch("/scrape", { method: "POST" });
+        setTimeout(fetchData, 2000); // fetch data, wait 2s and repopulate chart
+    }
+
+    // Countdown time
+    function updateCountdown(seconds) {
+        let countdownElement = document.getElementById("countdown");
+
+        let countdownInterval = setInterval(() => {
+            seconds--;
+            countdownElement.textContent = seconds;
+
+            if (seconds <= 0) {
+                clearInterval(countdownInterval); // Stop countdown at 0
+            }
+        }, 1000);
+    }
+
+    // Server job should run every minute, this will refresh a 5c past the minute so there's an update to show
+    function scheduleNextUpdate() {
+        let now = new Date();
+        let seconds = now.getSeconds();
+        let delay;
+
+        if (seconds < 5) {
+            delay = (5 - seconds) * 1000; // Wait until 5th second
+        } else {
+            delay = ((60 - seconds) + 5) * 1000; // Wait until next minute + 5 sec
+        }
+
+        let timeUntilNextUpdate = delay / 1000; // Convert to seconds
+        console.log(`Next update scheduled in ${timeUntilNextUpdate} seconds`);
+
+        // Trigger the countdown
+        updateCountdown(timeUntilNextUpdate);
+
+        setTimeout(() => {
+            fetchData();
+            scheduleNextUpdate(); // Recursively schedule next run
+        }, delay);
+    }
+
+    // Show the values
+    fetchData();
+    // Set up auto-populates
+    scheduleNextUpdate();
+
+
+</script>
+
+</body>
+</html>
